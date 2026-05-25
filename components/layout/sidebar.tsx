@@ -35,7 +35,7 @@ export function Sidebar({ role, fullName }: SidebarProps) {
   const visibleItems = navItems.filter((item) => item.roles.includes(role));
 
   return (
-    <aside className="hidden min-h-screen w-72 shrink-0 border-l bg-card lg:block">
+    <aside className="hidden min-h-screen w-80 shrink-0 border-l border-border/70 bg-card/95 lg:block">
       <div className="flex h-full flex-col">
         <div className="border-b p-5">
           <div className="flex items-center gap-3">
@@ -49,7 +49,7 @@ export function Sidebar({ role, fullName }: SidebarProps) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1.5 p-4">
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -58,8 +58,8 @@ export function Sidebar({ role, fullName }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
-                  isActive && "bg-primary/10 text-primary"
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+                  isActive && "bg-primary/12 text-primary shadow-sm ring-1 ring-primary/20"
                 )}
               >
                 <Icon className="h-4 w-4" />
