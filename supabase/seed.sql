@@ -130,7 +130,7 @@ insert into auth.identities (
   updated_at
 )
 select
-  id::text,
+  id:
   id,
   email,
   jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true, 'full_name', full_name),
