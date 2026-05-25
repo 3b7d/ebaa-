@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --font-arabic: "Segoe UI", Tahoma, Arial, sans-serif;
+    --font-arabic: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
     --background: 210 33% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -22,7 +22,7 @@
     --border: 214 32% 88%;
     --input: 214 32% 88%;
     --ring: 168 76% 30%;
-    --radius: 0.5rem;
+    --radius: 0.85rem;
   }
 
   .dark {
@@ -55,6 +55,7 @@
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
+    letter-spacing: 0.005em;
     font-family: var(--font-arabic);
   }
 
@@ -83,5 +84,12 @@
   .content-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
+  }
+}
+
+
+@layer components {
+  .surface-card {
+    @apply rounded-2xl border border-border/80 bg-card shadow-sm;
   }
 }

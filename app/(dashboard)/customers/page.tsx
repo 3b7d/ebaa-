@@ -125,7 +125,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     <div>
       <PageHeader
         title="العملاء"
-        description="إدارة ملفات العملاء ومتابعة حالتهم وربطهم بالزيارات الفعلية."
+        description="إدارة العملاء المسجلين ومتابعة حالاتهم واهتماماتهم."
         actions={
           <>
             <Button asChild variant="outline">
@@ -144,9 +144,9 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         }
       />
 
-      <Card className="mb-5">
+      <Card className="surface-card mb-5">
         <CardContent className="pt-6">
-          <form className="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
+          <form className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
             <div className="relative md:col-span-2 xl:col-span-2">
               <Search className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input name="q" defaultValue={filters.q} placeholder="بحث بالاسم أو رقم الجوال" className="pr-9" />
@@ -200,41 +200,37 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           ) : rows.length === 0 ? (
             <EmptyState
               icon={Search}
-              title="لا توجد بيانات لعرضها"
-              description="لم يتم العثور على عملاء مطابقين للفلاتر الحالية."
+              title="لا يوجد عملاء"
+              description="ابدأ بإضافة أول عميل أو تسجيل زيارة جديدة."
               className="m-6"
             />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>اسم العميل</TableHead>
+                  <TableHead>العميل</TableHead>
                   <TableHead>رقم الجوال</TableHead>
-                  <TableHead>المدينة</TableHead>
                   <TableHead>الفرع</TableHead>
                   <TableHead>موظف المبيعات</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>احتمالية الشراء</TableHead>
                   <TableHead>آخر زيارة</TableHead>
                   <TableHead>موعد المتابعة القادم</TableHead>
-                  <TableHead>آخر تحديث</TableHead>
-                  <TableHead>الإجراءات</TableHead>
+                                    <TableHead>الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((customer) => (
                   <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.full_name}</TableCell>
+                    <TableCell><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{customer.full_name.slice(0,2)}</div><div><p className="font-semibold">{customer.full_name}</p><p className="text-xs text-muted-foreground">{customer.city ?? "بدون مدينة"}</p></div></div></TableCell>
                     <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.city ?? "غير محدد"}</TableCell>
-                    <TableCell>{customer.branches?.name ?? "غير محدد"}</TableCell>
+                                        <TableCell>{customer.branches?.name ?? "غير محدد"}</TableCell>
                     <TableCell>{customer.profiles?.full_name ?? "غير محدد"}</TableCell>
                     <TableCell><CustomerStatusBadge status={customer.current_status} /></TableCell>
                     <TableCell><PurchaseProbabilityBadge probability={customer.purchase_probability} /></TableCell>
                     <TableCell>{formatSaudiDateTime(latestVisitByCustomer.get(customer.id))}</TableCell>
                     <TableCell>{formatSaudiDateTime(nextFollowUpByCustomer.get(customer.id))}</TableCell>
-                    <TableCell>{formatSaudiDateTime(customer.updated_at)}</TableCell>
-                    <TableCell>
+                                        <TableCell>
                       <div className="flex flex-wrap gap-2">
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/customers/${customer.id}`}><Eye className="h-4 w-4" />عرض التفاصيل</Link>

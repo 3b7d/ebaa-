@@ -54,13 +54,13 @@ export function TopHeader({
   unreadCount = 0
 }: TopHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <MobileNav role={role} />
           <div className="relative hidden w-full max-w-md md:block">
             <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="ابحث عن عميل أو رقم جوال" className="pr-9" />
+            <Input placeholder="ابحث عن عميل أو رقم جوال" className="h-10 rounded-xl border-border/70 bg-card pr-9" />
           </div>
         </div>
 

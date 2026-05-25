@@ -105,7 +105,7 @@ export function VisitForm({
   return (
     <form
       action={(formData) => startTransition(() => createVisitAction(formData))}
-      className="space-y-5"
+      className="space-y-6"
     >
       <input type="hidden" name="customer_id" value={foundCustomer?.id ?? ""} />
 
@@ -119,9 +119,9 @@ export function VisitForm({
         </Alert>
       ) : null}
 
-      <Card>
+      <Card className="surface-card">
         <CardHeader>
-          <CardTitle>بيانات العميل</CardTitle>
+          <CardTitle className="text-lg font-bold">١. بيانات العميل</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -135,7 +135,7 @@ export function VisitForm({
               placeholder="0500000000"
               required
             />
-            {checking ? <p className="text-xs text-muted-foreground">جاري التحقق من رقم الجوال...</p> : null}
+            {checking ? <p className="text-xs text-muted-foreground">يتم التحقق من رقم الجوال...</p> : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="full_name">اسم العميل</Label>
@@ -174,9 +174,9 @@ export function VisitForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="surface-card">
         <CardHeader>
-          <CardTitle>بيانات الزيارة</CardTitle>
+          <CardTitle className="text-lg font-bold">٢. بيانات الزيارة</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -250,7 +250,7 @@ export function VisitForm({
             </label>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="customer_status">حالة العميل</Label>
+            <Label htmlFor="customer_status">٣. الاهتمام والميزانية — حالة العميل</Label>
             <Select
               id="customer_status"
               name="customer_status"
@@ -281,17 +281,17 @@ export function VisitForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="next_follow_up_at">موعد المتابعة القادم</Label>
+            <Label htmlFor="next_follow_up_at">٤. المتابعة القادمة</Label>
             <Input id="next_follow_up_at" name="next_follow_up_at" type="datetime-local" />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="notes">ملاحظات الزيارة</Label>
+            <Label htmlFor="notes">٥. الملاحظات</Label>
             <Textarea id="notes" name="notes" rows={4} />
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border bg-background/95 p-3 backdrop-blur">
         <Button type="submit" disabled={isPending}>
           {isPending ? "جاري حفظ الزيارة..." : "تسجيل الزيارة"}
         </Button>
