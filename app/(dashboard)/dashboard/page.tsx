@@ -18,13 +18,10 @@ import {
   type ChartPoint,
   type TrendPoint
 } from "@/components/charts/dashboard-charts";
-import { MetricCard } from "@/components/metric-card";
-import { PageHeader } from "@/components/page-header";
+import { DashboardEmptyState, DashboardHero, DashboardKpiCard, DashboardPanel, ListRow, StatusChip } from "@/components/dashboard/workos";
 import { DashboardDataTable } from "@/components/tables/dashboard-data-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
   customerStatusBadge,
   customerStatusLabels,
@@ -164,36 +161,13 @@ function followUpStatusBadgeCell(statusValue: string) {
 }
 
 function quickActions(role: AppRole) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button asChild>
-        <Link href="/visits">
-          <CalendarCheck className="h-4 w-4" />
-          تسجيل زيارة جديدة
-        </Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/customers">
-          <UserPlus className="h-4 w-4" />
-          إضافة عميل
-        </Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/follow-ups">
-          <Clock3 className="h-4 w-4" />
-          عرض المتابعات
-        </Link>
-      </Button>
-      {role !== "sales_employee" ? (
-        <Button asChild variant="outline">
-          <Link href="/reports">
-            <FileBarChart className="h-4 w-4" />
-            عرض التقارير
-          </Link>
-        </Button>
-      ) : null}
-    </div>
-  );
+  const actions = [
+    { href: "/visits", label: "تسجيل زيارة جديدة", icon: CalendarCheck },
+    { href: "/customers", label: "إضافة عميل", icon: UserPlus },
+    { href: "/follow-ups", label: "عرض المتابعات", icon: Clock3 }
+  ];
+  if (role !== "sales_employee") actions.push({ href: "/reports", label: "عرض التقارير", icon: FileBarChart });
+  return actions;
 }
 
 export default async function DashboardPage() {
@@ -273,17 +247,13 @@ async function SalesEmployeeDashboard({ userId, role }: { userId: string; role: 
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="لوحة التحكم"
-        description="متابعة يومية لزياراتك وعملائك ومهامك القادمة"
-        actions={quickActions(role)}
-      />
+      <DashboardHero actions={quickActions(role)} />
 
-      <div className="grid dashboard-grid gap-4">
-        <MetricCard title="زياراتي اليوم" value={todayVisits?.length ?? 0} icon={CalendarCheck} />
-        <MetricCard title="عملائي الجدد" value={newCustomers?.length ?? 0} icon={Users} />
-        <MetricCard title="متابعات اليوم" value={(todayFollowUps ?? []).filter(isDueToday).length} icon={Clock3} />
-        <MetricCard title="المتابعات المتأخرة" value={overdueFollowUps?.length ?? 0} icon={AlertTriangle} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardKpiCard title="زيارات اليوم" value={todayVisits?.length ?? 0} helper="خلال اليوم" icon={CalendarCheck} chip="ضمن نطاق صلاحيتك" />
+        <DashboardKpiCard title="العملاء الجدد" value={newCustomers?.length ?? 0} helper="من إجمالي بياناتك" icon={Users} tone="green" />
+        <DashboardKpiCard title="متابعات اليوم" value={(todayFollowUps ?? []).filter(isDueToday).length} helper="متابعة اليوم" icon={Clock3} tone="amber" />
+        <DashboardKpiCard title="المتابعات المتأخرة" value={overdueFollowUps?.length ?? 0} helper="بحاجة إلى إجراء" icon={AlertTriangle} tone="rose" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -322,11 +292,7 @@ async function SalesEmployeeDashboard({ userId, role }: { userId: string; role: 
       </div>
 
       {todayVisits?.length ? null : (
-        <EmptyState
-          icon={CalendarCheck}
-          title="لا توجد زيارات مسجلة اليوم"
-          description="يمكنك استخدام زر تسجيل زيارة جديدة عند استقبال أول عميل اليوم."
-        />
+        <DashboardEmptyState text="لا توجد زيارات مسجلة اليوم، يمكنك تسجيل زيارة جديدة عند استقبال أول عميل." />
       )}
     </div>
   );
@@ -349,12 +315,8 @@ async function BranchSupervisorDashboard({
   if (!branchId) {
     return (
       <div className="space-y-6">
-        <PageHeader title="لوحة التحكم" description="لم يتم ربط حسابك بفرع حتى الآن" actions={quickActions(role)} />
-        <EmptyState
-          icon={Store}
-          title="لا توجد بيانات لعرضها"
-          description="يرجى التواصل مع مسؤول النظام لربط حسابك بفرع."
-        />
+        <DashboardHero actions={quickActions(role)} />
+        <DashboardEmptyState text="لا توجد بيانات لعرضها. يرجى التواصل مع مسؤول النظام لربط حسابك بفرع." />
       </div>
     );
   }
@@ -405,17 +367,13 @@ async function BranchSupervisorDashboard({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="لوحة التحكم"
-        description="نظرة تشغيلية على أداء الفرع والموظفين والعملاء"
-        actions={quickActions(role)}
-      />
+      <DashboardHero actions={quickActions(role)} />
 
-      <div className="grid dashboard-grid gap-4">
-        <MetricCard title="زيارات الفرع اليوم" value={todayVisits.length} icon={CalendarCheck} />
-        <MetricCard title="زيارات الأسبوع" value={visits.length} icon={BarChart3} />
-        <MetricCard title="العملاء الجدد" value={customers.filter((customer) => customer.current_status === "new").length} icon={Users} />
-        <MetricCard title="المتابعات المتأخرة" value={branchScopedFollowUps.filter(isOverdue).length} icon={AlertTriangle} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardKpiCard title="زيارات الفرع اليوم" value={todayVisits.length} helper="خلال اليوم" icon={CalendarCheck} />
+        <DashboardKpiCard title="زيارات الأسبوع" value={visits.length} helper="آخر 7 أيام" icon={BarChart3} tone="violet" />
+        <DashboardKpiCard title="العملاء الجدد" value={customers.filter((customer) => customer.current_status === "new").length} helper="ضمن نطاق الفرع" icon={Users} tone="green" />
+        <DashboardKpiCard title="المتابعات المتأخرة" value={branchScopedFollowUps.filter(isOverdue).length} helper="بحاجة إلى إجراء" icon={AlertTriangle} tone="rose" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -447,7 +405,7 @@ async function BranchSupervisorDashboard({
                 ))}
               </div>
             ) : (
-              <EmptyState icon={BarChart3} title="لا توجد بيانات لعرضها" description="لا توجد زيارات مصنفة حتى الآن." />
+              <DashboardEmptyState text="لا توجد بيانات لعرضها. لا توجد زيارات مصنفة حتى الآن." />
             )}
           </CardContent>
         </Card>
@@ -566,19 +524,15 @@ async function ManagementDashboard({ role }: { role: AppRole }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="لوحة التحكم"
-        description="لوحة مؤشرات شاملة لجميع الفروع والفرق"
-        actions={quickActions(role)}
-      />
+      <DashboardHero actions={quickActions(role)} />
 
-      <div className="grid dashboard-grid gap-4">
-        <MetricCard title="إجمالي الزيارات" value={visitRows.length} icon={CalendarCheck} />
-        <MetricCard title="إجمالي العملاء" value={customerRows.length} icon={Users} />
-        <MetricCard title="زيارات اليوم" value={todayVisits.length} icon={Clock3} />
-        <MetricCard title="المتابعات المتأخرة" value={overdueFollowUps.length} icon={AlertTriangle} />
-        <MetricCard title="العملاء ذوو الاحتمالية العالية" value={highProbabilityCustomers.length} icon={TrendingUp} />
-        <MetricCard title="العملاء المحولون إلى بيع" value={soldCustomers.length} icon={BarChart3} />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <DashboardKpiCard title="إجمالي الزيارات" value={visitRows.length} helper="من إجمالي البيانات المتاحة" icon={CalendarCheck} />
+        <DashboardKpiCard title="إجمالي العملاء" value={customerRows.length} helper="ضمن نطاق صلاحيتك" icon={Users} tone="green" />
+        <DashboardKpiCard title="زيارات اليوم" value={todayVisits.length} helper="خلال اليوم" icon={Clock3} tone="amber" />
+        <DashboardKpiCard title="المتابعات المتأخرة" value={overdueFollowUps.length} helper="بحاجة إلى متابعة" icon={AlertTriangle} tone="rose" />
+        <DashboardKpiCard title="العملاء ذوو الاحتمالية العالية" value={highProbabilityCustomers.length} helper="فرص بيع متقدمة" icon={TrendingUp} />
+        <DashboardKpiCard title="العملاء المحولون إلى بيع" value={soldCustomers.length} helper="نتائج محققة" icon={BarChart3} tone="green" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
