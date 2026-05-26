@@ -62,7 +62,23 @@ export function DashboardHero({
   );
 }
 
-export function DashboardKpiCard({ title, value, helper, icon: Icon, chip, tone = "violet" }: { title: string; value: string | number; helper: string; icon: LucideIcon; chip?: string; tone?: "violet" | "green" | "amber" | "rose"; }) {
+export function DashboardKpiCard({
+  title,
+  value,
+  helper,
+  icon: Icon,
+  chip,
+  tone = "violet",
+  href
+}: {
+  title: string;
+  value: string | number;
+  helper: string;
+  icon: LucideIcon;
+  chip?: string;
+  tone?: "violet" | "green" | "amber" | "rose";
+  href?: string;
+}) {
   const toneMap = {
     violet: "bg-violet-500/15 text-violet-300",
     green: "bg-emerald-500/15 text-emerald-300",
@@ -70,7 +86,7 @@ export function DashboardKpiCard({ title, value, helper, icon: Icon, chip, tone 
     rose: "bg-rose-500/15 text-rose-300"
   };
 
-  return (
+  const content = (
     <article className="rounded-2xl border border-border/60 bg-card/75 p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <span className={cn("inline-flex h-10 w-10 items-center justify-center rounded-xl", toneMap[tone])}>
@@ -80,8 +96,22 @@ export function DashboardKpiCard({ title, value, helper, icon: Icon, chip, tone 
       </div>
       <p className="text-sm text-muted-foreground">{title}</p>
       <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">{helper}</p>
+        {href ? <span className="text-xs font-medium text-primary">عرض التفاصيل</span> : null}
+      </div>
     </article>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="group block cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <div className="transition group-hover:border-primary/30">{content}</div>
+    </Link>
   );
 }
 

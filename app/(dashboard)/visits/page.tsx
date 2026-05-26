@@ -66,8 +66,9 @@ export default async function VisitsPage({ searchParams }: VisitsPageProps) {
   if (filters.category) query = query.eq("interest_category_id", filters.category);
   if (filters.status) query = query.eq("customer_status", filters.status);
   if (filters.date) {
-    const start = new Date(`${filters.date}T00:00:00`);
-    const end = new Date(`${filters.date}T23:59:59`);
+    const todayKey = filters.date === "today" ? new Date().toISOString().slice(0, 10) : filters.date;
+    const start = new Date(`${todayKey}T00:00:00`);
+    const end = new Date(`${todayKey}T23:59:59`);
     query = query.gte("visit_datetime", start.toISOString()).lte("visit_datetime", end.toISOString());
   }
 
