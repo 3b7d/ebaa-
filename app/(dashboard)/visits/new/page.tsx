@@ -40,12 +40,12 @@ export default async function NewVisitPage({ searchParams }: NewVisitPageProps) 
     <div>
       <PageHeader
         title="تسجيل زيارة جديدة"
-        description="نموذج سريع لتسجيل الزيارة وربطها بالعميل وإنشاء المتابعة عند الحاجة."
+        description="أضف بيانات العميل والزيارة والمتابعة القادمة بسرعة ووضوح"
         actions={
           <Button asChild variant="outline">
             <Link href="/visits">
               <ArrowRight className="h-4 w-4" />
-              العودة للزيارات
+              الرجوع إلى الزيارات
             </Link>
           </Button>
         }
@@ -55,7 +55,7 @@ export default async function NewVisitPage({ searchParams }: NewVisitPageProps) 
         <Alert className="mb-5 border-destructive/40 text-destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>تعذر تسجيل الزيارة</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>تعذر تسجيل الزيارة، يرجى المحاولة مرة أخرى.</AlertDescription>
         </Alert>
       ) : null}
 
