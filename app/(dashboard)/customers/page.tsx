@@ -51,7 +51,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     status: param(searchParams, "status"),
     source: param(searchParams, "source"),
     probability: param(searchParams, "probability"),
-    createdFrom: param(searchParams, "created_from")
+    createdFrom: param(searchParams, "created_from"),
+    createdRange: param(searchParams, "createdRange")
   };
 
   const [branchesResult, employeesResult, categoriesResult, sourcesResult] = await Promise.all([
@@ -85,6 +86,13 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   if (filters.source) query = query.eq("source_id", filters.source);
   if (filters.probability) query = query.eq("purchase_probability", filters.probability);
   if (filters.createdFrom) query = query.gte("created_at", filters.createdFrom);
+  if (filters.createdRange === "today") {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    query = query.gte("created_at", start.toISOString()).lt("created_at", end.toISOString());
+  }
   if (customerIdsByCategory) {
     query = customerIdsByCategory.length ? query.in("id", customerIdsByCategory) : query.eq("id", "00000000-0000-0000-0000-000000000000");
   }

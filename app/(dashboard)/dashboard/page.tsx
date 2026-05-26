@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   BarChart3,
@@ -170,8 +171,18 @@ function quickActions(role: AppRole) {
   return actions;
 }
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+function param(searchParams: DashboardPageProps["searchParams"], key: string) {
+  const value = searchParams?.[key];
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const context = await requireUser();
+  const branchId = param(searchParams, "branchId") || "all";
 
   if (context.profile.role === "sales_employee") {
     return <SalesEmployeeDashboard userId={context.userId} role={context.profile.role} />;
@@ -187,7 +198,7 @@ export default async function DashboardPage() {
     );
   }
 
-  return <ManagementDashboard role={context.profile.role} />;
+  return <ManagementDashboard role={context.profile.role} branchId={branchId} />;
 }
 
 async function SalesEmployeeDashboard({ userId, role }: { userId: string; role: AppRole }) {
@@ -248,12 +259,13 @@ async function SalesEmployeeDashboard({ userId, role }: { userId: string; role: 
   return (
     <div className="space-y-6">
       <DashboardHero actions={quickActions(role)} />
+      <Badge variant="secondary" className="w-fit">بيانات الفرع</Badge>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <DashboardKpiCard title="زيارات اليوم" value={todayVisits?.length ?? 0} helper="خلال اليوم" icon={CalendarCheck} chip="ضمن نطاق صلاحيتك" />
-        <DashboardKpiCard title="العملاء الجدد" value={newCustomers?.length ?? 0} helper="من إجمالي بياناتك" icon={Users} tone="green" />
-        <DashboardKpiCard title="متابعات اليوم" value={(todayFollowUps ?? []).filter(isDueToday).length} helper="متابعة اليوم" icon={Clock3} tone="amber" />
-        <DashboardKpiCard title="المتابعات المتأخرة" value={overdueFollowUps?.length ?? 0} helper="بحاجة إلى إجراء" icon={AlertTriangle} tone="rose" />
+        <DashboardKpiCard title="العملاء الجدد" value={newCustomers?.length ?? 0} helper="من إجمالي بياناتك" icon={Users} tone="green" href="/customers" />
+        <DashboardKpiCard title="متابعات اليوم" value={(todayFollowUps ?? []).filter(isDueToday).length} helper="متابعة اليوم" icon={Clock3} tone="amber" href="/visits?date=today" />
+        <DashboardKpiCard title="المتابعات المتأخرة" value={overdueFollowUps?.length ?? 0} helper="بحاجة إلى إجراء" icon={AlertTriangle} tone="rose" href="/follow-ups?status=overdue" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -368,9 +380,10 @@ async function BranchSupervisorDashboard({
   return (
     <div className="space-y-6">
       <DashboardHero actions={quickActions(role)} />
+      <Badge variant="secondary" className="w-fit">بيانات الفرع</Badge>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <DashboardKpiCard title="زيارات الفرع اليوم" value={todayVisits.length} helper="خلال اليوم" icon={CalendarCheck} />
+        <DashboardKpiCard title="زيارات الفرع اليوم" value={todayVisits.length} helper="خلال اليوم" icon={CalendarCheck} href="/visits" />
         <DashboardKpiCard title="زيارات الأسبوع" value={visits.length} helper="آخر 7 أيام" icon={BarChart3} tone="violet" />
         <DashboardKpiCard title="العملاء الجدد" value={customers.filter((customer) => customer.current_status === "new").length} helper="ضمن نطاق الفرع" icon={Users} tone="green" />
         <DashboardKpiCard title="المتابعات المتأخرة" value={branchScopedFollowUps.filter(isOverdue).length} helper="بحاجة إلى إجراء" icon={AlertTriangle} tone="rose" />
@@ -452,7 +465,7 @@ async function BranchSupervisorDashboard({
   );
 }
 
-async function ManagementDashboard({ role }: { role: AppRole }) {
+async function ManagementDashboard({ role, branchId }: { role: AppRole; branchId: string }) {
   const supabase = createClient();
   const today = startOfDay();
   const tomorrow = addDays(today, 1);
@@ -486,20 +499,28 @@ async function ManagementDashboard({ role }: { role: AppRole }) {
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
   const customerMap = new Map(customerRows.map((customer) => [customer.id, customer]));
   const profileMap = new Map(profileRows.map((profile) => [profile.id, profile.full_name]));
+  const validBranchIds = new Set(branchRows.map((branch) => branch.id));
+  const selectedBranchId = branchId === "all" ? "all" : validBranchIds.has(branchId) ? branchId : "all";
+  if (selectedBranchId !== branchId) redirect(`/dashboard?branchId=${selectedBranchId}`);
 
-  const todayVisits = visitRows.filter((visit) => new Date(visit.visit_datetime) >= today && new Date(visit.visit_datetime) < tomorrow);
-  const overdueFollowUps = followUpRows.filter(isOverdue);
-  const highProbabilityCustomers = customerRows.filter((customer) => customer.purchase_probability === "high" || customer.purchase_probability === "very_high");
-  const soldCustomers = customerRows.filter((customer) => customer.current_status === "sold");
+  const filteredCustomers = selectedBranchId === "all" ? customerRows : customerRows.filter((customer) => customer.branch_id === selectedBranchId);
+  const filteredVisits = selectedBranchId === "all" ? visitRows : visitRows.filter((visit) => visit.branch_id === selectedBranchId);
+  const branchCustomerIds = new Set(filteredCustomers.map((customer) => customer.id));
+  const filteredFollowUps = selectedBranchId === "all" ? followUpRows : followUpRows.filter((followUp) => branchCustomerIds.has(followUp.customer_id));
 
-  const visitsByBranch = toChartPoints(countBy(visitRows, (visit) => visit.branch_id), branchMap);
-  const customersBySource = toChartPoints(countBy(customerRows, (customer) => customer.source_id), sourceMap);
-  const visitsByCategory = toChartPoints(countBy(visitRows, (visit) => visit.interest_category_id), categoryMap);
+  const todayVisits = filteredVisits.filter((visit) => new Date(visit.visit_datetime) >= today && new Date(visit.visit_datetime) < tomorrow);
+  const overdueFollowUps = filteredFollowUps.filter(isOverdue);
+  const highProbabilityCustomers = filteredCustomers.filter((customer) => customer.purchase_probability === "high" || customer.purchase_probability === "very_high");
+  const soldCustomers = filteredCustomers.filter((customer) => customer.current_status === "sold");
+
+  const visitsByBranch = toChartPoints(countBy(filteredVisits, (visit) => visit.branch_id), branchMap);
+  const customersBySource = toChartPoints(countBy(filteredCustomers, (customer) => customer.source_id), sourceMap);
+  const visitsByCategory = toChartPoints(countBy(filteredVisits, (visit) => visit.interest_category_id), categoryMap);
   const customersByStatus = toChartPoints(
-    countBy(customerRows, (customer) => customer.current_status),
+    countBy(filteredCustomers, (customer) => customer.current_status),
     customerStatusLabels
   );
-  const visitTrend = buildVisitTrend(visitRows, thirtyDaysAgo);
+  const visitTrend = buildVisitTrend(filteredVisits, thirtyDaysAgo);
 
   const topBranches = branchRows
     .map((branch) => ({
@@ -525,14 +546,23 @@ async function ManagementDashboard({ role }: { role: AppRole }) {
   return (
     <div className="space-y-6">
       <DashboardHero actions={quickActions(role)} />
+      <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
+        <p className="mb-3 text-sm font-semibold">الفرع المحدد</p>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard?branchId=all" className={selectedBranchId === "all" ? "rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground" : "rounded-full border border-border px-3 py-1.5 text-xs hover:bg-secondary"}>كل الفروع</Link>
+          {branchRows.map((branch) => (
+            <Link key={branch.id} href={`/dashboard?branchId=${branch.id}`} className={selectedBranchId === branch.id ? "rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground" : "rounded-full border border-border px-3 py-1.5 text-xs hover:bg-secondary"}>{branch.name}</Link>
+          ))}
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <DashboardKpiCard title="إجمالي الزيارات" value={visitRows.length} helper="من إجمالي البيانات المتاحة" icon={CalendarCheck} />
-        <DashboardKpiCard title="إجمالي العملاء" value={customerRows.length} helper="ضمن نطاق صلاحيتك" icon={Users} tone="green" />
+        <DashboardKpiCard title="إجمالي الزيارات" value={filteredVisits.length} helper="من إجمالي البيانات المتاحة" icon={CalendarCheck} />
+        <DashboardKpiCard title="إجمالي العملاء" value={filteredCustomers.length} helper="ضمن نطاق صلاحيتك" icon={Users} tone="green" />
         <DashboardKpiCard title="زيارات اليوم" value={todayVisits.length} helper="خلال اليوم" icon={Clock3} tone="amber" />
         <DashboardKpiCard title="المتابعات المتأخرة" value={overdueFollowUps.length} helper="بحاجة إلى متابعة" icon={AlertTriangle} tone="rose" />
-        <DashboardKpiCard title="العملاء ذوو الاحتمالية العالية" value={highProbabilityCustomers.length} helper="فرص بيع متقدمة" icon={TrendingUp} />
-        <DashboardKpiCard title="العملاء المحولون إلى بيع" value={soldCustomers.length} helper="نتائج محققة" icon={BarChart3} tone="green" />
+        <DashboardKpiCard title="العملاء ذوو الاحتمالية العالية" value={highProbabilityCustomers.length} helper="فرص بيع متقدمة" icon={TrendingUp} href="/customers?probability=high" />
+        <DashboardKpiCard title="العملاء المحولون إلى بيع" value={soldCustomers.length} helper="نتائج محققة" icon={BarChart3} tone="green" href="/customers?status=sold" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
