@@ -63,6 +63,7 @@ export async function createVisitAction(formData: FormData) {
   const visitType = text(formData, "visit_type") || "showroom_visit";
   const customerStatus = text(formData, "customer_status") || "new";
   const purchaseProbability = nullableText(formData, "purchase_probability");
+  const interestCategoryId = nullableText(formData, "interest_category_id");
 
   if (!fullName) fail(returnTo, "اسم العميل مطلوب");
   if (!phone) fail(returnTo, "رقم الجوال مطلوب");
@@ -79,7 +80,9 @@ export async function createVisitAction(formData: FormData) {
   const salesEmployeeId =
     canManageBranch(role) ? nullableText(formData, "sales_employee_id") || context.userId : context.userId;
 
-  if (!branchId || !salesEmployeeId) fail(returnTo, "يرجى تحديد الفرع وموظف المبيعات");
+  if (!branchId) fail(returnTo, "يرجى اختيار الفرع");
+  if (!salesEmployeeId) fail(returnTo, "يرجى اختيار موظف المبيعات");
+  if (!interestCategoryId) fail(returnTo, "يرجى اختيار القسم المهتم به");
   const requiredBranchId = branchId;
   const requiredSalesEmployeeId = salesEmployeeId;
 
@@ -152,7 +155,7 @@ export async function createVisitAction(formData: FormData) {
       ? new Date(text(formData, "visit_datetime")).toISOString()
       : new Date().toISOString(),
     visit_type: visitType,
-    interest_category_id: nullableText(formData, "interest_category_id"),
+    interest_category_id: interestCategoryId,
     requested_product: nullableText(formData, "requested_product"),
     budget_range: nullableText(formData, "budget_range"),
     has_measurements: booleanValue(formData, "has_measurements"),
@@ -210,6 +213,7 @@ export async function createVisitAction(formData: FormData) {
     });
   }
 
+  let successMessage = "تم تسجيل الزيارة بنجاح";
   if (visitPayload.next_follow_up_at) {
     const followUpPayload = {
       customer_id: customerId,
@@ -224,6 +228,7 @@ export async function createVisitAction(formData: FormData) {
 
     const { error: followUpError } = await supabase.from("follow_ups").insert(followUpPayload);
     if (!followUpError) {
+      successMessage = "تم تسجيل الزيارة وإنشاء متابعة قادمة";
       await logActivity({
         entityType: "customer",
         entityId: customerId,
@@ -237,7 +242,7 @@ export async function createVisitAction(formData: FormData) {
   revalidatePath("/customers");
   revalidatePath("/visits");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/visits/${visit.id}?success=${encodeURIComponent("تم تسجيل الزيارة بنجاح")}`);
+  redirect(`/visits/${visit.id}?success=${encodeURIComponent(successMessage)}`);
 }
 
 export async function updateVisitAction(formData: FormData) {
